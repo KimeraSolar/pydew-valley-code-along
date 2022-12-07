@@ -6,7 +6,7 @@ IS_WINDOWS = sys.platform.startswith('win')
 #Sceen
 SCREEN_WIDTH = 1280 / 2
 SCREEN_HEIGHT = 720 / 2
-TITLE_SIZE = 64
+TILE_SIZE = 64
 
 PLAYER_SIZE = (32, 64)
 PLAYER_SPEED = 200

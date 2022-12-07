@@ -51,7 +51,7 @@ class Level:
             for asset in assets:
                 for x, y, surface in asset.tiles():
                     Generic(
-                        pos=(x*TITLE_SIZE,y*TITLE_SIZE),
+                        pos=(x*TILE_SIZE,y*TILE_SIZE),
                         surface=surface,
                         groups= self.all_sprites,
                         z = LAYERS[layer]
@@ -59,7 +59,7 @@ class Level:
 
         for x, y, surface in tmx_data.get_layer_by_name('Fence').tiles():
             Generic(
-                pos=(x*TITLE_SIZE,y*TITLE_SIZE),
+                pos=(x*TILE_SIZE,y*TILE_SIZE),
                 surface=surface,
                 groups= [self.all_sprites, self.collision_sprites],
                 z = LAYERS[layer]
@@ -67,7 +67,7 @@ class Level:
         
         for x, y, surface in tmx_data.get_layer_by_name('Water').tiles():
             Water(
-                pos=(x*TITLE_SIZE,y*TITLE_SIZE),
+                pos=(x*TILE_SIZE,y*TILE_SIZE),
                 frames=import_folder(GRAPHICS_PATH + FOLDER_SEPARATOR + 'water'),
                 groups= self.all_sprites,
             )
@@ -90,8 +90,8 @@ class Level:
 
         for x, y, surface in tmx_data.get_layer_by_name('Collision').tiles():
             Generic(
-                (x*TITLE_SIZE, y*TITLE_SIZE),
-                pygame.Surface((TITLE_SIZE, TITLE_SIZE)),
+                (x*TILE_SIZE, y*TILE_SIZE),
+                pygame.Surface((TILE_SIZE, TILE_SIZE)),
                 self.collision_sprites
             )
 
