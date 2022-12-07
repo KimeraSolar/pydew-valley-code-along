@@ -38,9 +38,9 @@ class WildFlower(Generic):
         self.hitbox = self.rect.copy().inflate(-20, -self.rect.height*0.9)
 
 class Particle(Generic):
-    def __init__(self, pos, surface, groups, z=LAYERS['main'], duration = 200) -> None:
+    def __init__(self, pos, surface, groups, z=LAYERS['main'], color=(255, 255, 255), duration = 200) -> None:
         mask_surface = pygame.mask.from_surface(surface)
-        new_surface = mask_surface.to_surface()
+        new_surface = mask_surface.to_surface(setcolor=color)
         new_surface.set_colorkey((0, 0, 0))
         
         super().__init__(pos, new_surface , groups, z)
@@ -76,17 +76,26 @@ class Tree(Generic):
         self.invul_timer = Timer(200)
 
     def damage(self):
-        self.health -= 1
-        if len(self.apple_sprites.sprites()) > 0:
-            random_apple = choice(self.apple_sprites.sprites())
-            random_apple.kill()
+        if self.alive:
+            self.health -= 1
             Particle(
-                pos=random_apple.rect.topleft,
-                surface=random_apple.image,
-                groups=self.groups()[0],
-                z=LAYERS['fruit']
-            )
-            self.player_add('apple', 1)
+                    pos=self.rect.topleft,
+                    surface=self.image,
+                    groups=self.groups()[0],
+                    z=LAYERS['main'],
+                    duration=300,
+                    color=(200, 0, 0),
+                )
+            if len(self.apple_sprites.sprites()) > 0:
+                random_apple = choice(self.apple_sprites.sprites())
+                random_apple.kill()
+                Particle(
+                    pos=random_apple.rect.topleft,
+                    surface=random_apple.image,
+                    groups=self.groups()[0],
+                    z=LAYERS['fruit']
+                )
+                self.player_add('apple', 1)
 
     def create_fruit(self):
         for pos in self.apple_pos:
