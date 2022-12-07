@@ -1,15 +1,16 @@
 import pygame
 from event_timer import Timer
+from sprites import Particle
 from settings import *
 from utils import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, trees, interaction_sprites) -> None:
+    def __init__(self, pos, group, collision_sprites, trees, interaction_sprites, soil_layer) -> None:
         super().__init__(group)
         
         self.graphics_setup(pos)
         self.dynamics_setup(collision_sprites)
-        self.interactions_setup(trees, interaction_sprites)
+        self.interactions_setup(trees, interaction_sprites, soil_layer)
         self.inventory_setup()
         self.tools_setup()
         self.timers_setup()
@@ -23,8 +24,9 @@ class Player(pygame.sprite.Sprite):
             'tomato' : 0,
         }
 
-    def interactions_setup(self, trees, interaction_sprites):
+    def interactions_setup(self, trees, interaction_sprites, soil_layer):
         self.trees = trees
+        self.soil_layer = soil_layer
         self.get_target_pos()
         self.interaction_sprites = interaction_sprites
         self.sleeping = False
@@ -80,19 +82,19 @@ class Player(pygame.sprite.Sprite):
 
     def use_tool(self):
         if self.tools[self.selected_tool] == 'hoe':
-            pass
+            self.soil_layer.get_hit(self.target_pos)
         elif self.tools[self.selected_tool] == 'axe':
             for tree in self.trees.sprites():
                 if tree.rect.collidepoint(self.target_pos):
                     tree.damage()
         elif self.tools[self.selected_tool] == 'water':
-            pass
+            self.soil_layer.water(self.target_pos)
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]
 
     def use_seed(self):
-        pass
+        self.soil_layer.plant_seed(self.target_pos, self.seeds[self.selected_seed], self.collision_sprites)
 
     def input(self):
         pressed_keys = pygame.key.get_pressed()
@@ -151,8 +153,6 @@ class Player(pygame.sprite.Sprite):
                 elif collided_interaction_sprite[0].name == 'Bed':
                     self.status = 'left_idle'
                     self.sleeping = True
-                    
-
 
     def move(self, delta_time):
         # normalizing the direction vector to keep the speed constant
@@ -208,10 +208,25 @@ class Player(pygame.sprite.Sprite):
         for timer in self.timers.values():
             timer.update()
 
+    def harvest_plant(self):
+        for plant in self.soil_layer.plant_sprites:
+            if plant.harvastable and plant.rect.colliderect(self.hitbox):
+                self.item_inventory[plant.plant_type] += 1
+                print(self.item_inventory)
+                Particle(
+                    pos=plant.rect.topleft,
+                    surface=plant.image,
+                    z=LAYERS['main'],
+                    groups=self.groups()[0]
+                )
+                self.soil_layer.remove_plant(plant)
+                plant.kill()
+
     def update(self, delta_time) -> None:
         self.input()
         self.get_status()
         self.update_timers()
         self.get_target_pos()
+        self.harvest_plant()
         self.move(delta_time)
         self.animate(delta_time)

@@ -1,3 +1,4 @@
+from random import randint
 import pygame
 from overlay import Overlay
 from camera_group import CameraGroup
@@ -6,6 +7,8 @@ from utils import *
 from player import Player
 from transition import Transition
 from sprites import Generic, Water, WildFlower, Tree, Interaction
+from soil import SoilLayer
+from sky import Rain, Sky
 from pytmx.util_pygame import load_pygame
 
 class Level:
@@ -25,6 +28,7 @@ class Level:
     def setup(self):
         tmx_data = load_pygame(DATA_PATH + FOLDER_SEPARATOR + 'map.tmx')
 
+        self.soil_layer = SoilLayer(self.all_sprites)
         self.map_setup(tmx_data)
         
         Generic(
@@ -34,6 +38,10 @@ class Level:
             z = LAYERS['ground']
         )
         self.overlay = Overlay(self.player)
+
+        self.rain = Rain(self.all_sprites)
+        self.sky = Sky()
+        self.will_rain()
 
     def player_add(self, item, qtd):
         self.player.item_inventory[item] += qtd
@@ -102,7 +110,8 @@ class Level:
                     group=self.all_sprites, 
                     collision_sprites=self.collision_sprites, 
                     trees=self.tree_sprites,
-                    interaction_sprites=self.interaction_sprites
+                    interaction_sprites=self.interaction_sprites,
+                    soil_layer = self.soil_layer,
                 )
             elif object.name == 'Bed':
                 Interaction(
@@ -112,6 +121,9 @@ class Level:
                     name= object.name
                 )
 
+    def will_rain(self):
+        self.raining = randint(0, 10) > 7
+
     def reset(self):
         for tree in self.tree_sprites.sprites():
             if not tree.alive:
@@ -119,12 +131,24 @@ class Level:
             for apple in tree.apple_sprites.sprites():
                 apple.kill()
             tree.create_fruit()
+        
+        self.soil_layer.grow_plants()
+        self.soil_layer.remove_water()
+        self.sky.color.clear()
+        self.sky.color.extend(self.sky.start_color)
+        self.will_rain()
 
     def run(self, delta_time):
         self.display_surface.fill('black')
         self.all_sprites.custom_draw(player=self.player)
         self.all_sprites.update(delta_time)
         self.overlay.display()
+
+        if self.raining:
+            self.rain.update()
+            self.soil_layer.water_all()
+
+        self.sky.display(delta_time)
 
         if self.player.sleeping:
             self.transition.play()
