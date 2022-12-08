@@ -1,35 +1,39 @@
 import pygame
 from event_timer import Timer
 from sprites import Particle
+from inventory import Inventory
+from menu import Menu
 from settings import *
 from utils import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, trees, interaction_sprites, soil_layer) -> None:
+    def __init__(self, pos, group, collision_sprites, trees, interaction_sprites, soil_layer, toggle_shop) -> None:
         super().__init__(group)
         
         self.graphics_setup(pos)
         self.dynamics_setup(collision_sprites)
-        self.interactions_setup(trees, interaction_sprites, soil_layer)
+        self.interactions_setup(trees, interaction_sprites, soil_layer, toggle_shop)
         self.inventory_setup()
         self.tools_setup()
         self.timers_setup()
         self.seeds_setup()
 
     def inventory_setup(self):
-        self.item_inventory = {
-            'wood' : 0,
-            'apple' : 0,
-            'corn' : 0,
-            'tomato' : 0,
-        }
+        self.inventory = Inventory()
+        self.inventory.display_config(Menu(self))
 
-    def interactions_setup(self, trees, interaction_sprites, soil_layer):
+    def interactions_setup(self, trees, interaction_sprites, soil_layer, toggle_shop):
         self.trees = trees
         self.soil_layer = soil_layer
         self.get_target_pos()
         self.interaction_sprites = interaction_sprites
         self.sleeping = False
+        self.toggle_shop = toggle_shop
+        
+        self.success = pygame.mixer.Sound(AUDIO_PATH + FOLDER_SEPARATOR + 'success.wav')
+        self.success.set_volume(0.1)
+
+        self.watering_sound = pygame.mixer.Sound(AUDIO_PATH + FOLDER_SEPARATOR + 'water.mp3')
 
     def timers_setup(self):
         self.timers = {
@@ -89,12 +93,15 @@ class Player(pygame.sprite.Sprite):
                     tree.damage()
         elif self.tools[self.selected_tool] == 'water':
             self.soil_layer.water(self.target_pos)
+            self.watering_sound.play()
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]
 
     def use_seed(self):
-        self.soil_layer.plant_seed(self.target_pos, self.seeds[self.selected_seed], self.collision_sprites)
+        if self.inventory.seed_inventory[self.seeds[self.selected_seed]] > 0:
+            self.inventory.seed_inventory[self.seeds[self.selected_seed]] -= 1
+            self.soil_layer.plant_seed(self.target_pos, self.seeds[self.selected_seed], self.collision_sprites)
 
     def input(self):
         pressed_keys = pygame.key.get_pressed()
@@ -149,7 +156,7 @@ class Player(pygame.sprite.Sprite):
             collided_interaction_sprite = pygame.sprite.spritecollide(self, self.interaction_sprites, False)
             if collided_interaction_sprite:
                 if collided_interaction_sprite[0].name == 'Trader':
-                    pass
+                    self.toggle_shop()
                 elif collided_interaction_sprite[0].name == 'Bed':
                     self.status = 'left_idle'
                     self.sleeping = True
@@ -208,11 +215,14 @@ class Player(pygame.sprite.Sprite):
         for timer in self.timers.values():
             timer.update()
 
+    def add_to_inventory(self, item, qtd):
+        self.inventory.item_inventory[item] += qtd
+        self.success.play()
+
     def harvest_plant(self):
         for plant in self.soil_layer.plant_sprites:
             if plant.harvastable and plant.rect.colliderect(self.hitbox):
-                self.item_inventory[plant.plant_type] += 1
-                print(self.item_inventory)
+                self.add_to_inventory(plant.plant_type , 1)
                 Particle(
                     pos=plant.rect.topleft,
                     surface=plant.image,

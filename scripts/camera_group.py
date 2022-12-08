@@ -16,6 +16,3 @@ class CameraGroup(pygame.sprite.Group):
                 offset_rect = sprite.rect.copy()
                 offset_rect.center -= self.offset
                 self.display_surface.blit(sprite.image, offset_rect)
-
-                if sprite == player:
-                    pygame.draw.circle(self.display_surface, 'blue', offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]], 5)

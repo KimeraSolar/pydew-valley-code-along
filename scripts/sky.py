@@ -60,9 +60,11 @@ class Sky:
         self.color = self.start_color.copy()
         self.end_color = [38, 101, 189]
 
-    def display(self, delta_time):
+    def update(self, delta_time):
         for index, value in enumerate(self.end_color):
             if self.color[index] > value:
-                self.color[index] -= 5 * delta_time
+                self.color[index] -= 3 * delta_time
+
+    def display(self):
         self.full_surface.fill(self.color)
         self.display_surface.blit(self.full_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)

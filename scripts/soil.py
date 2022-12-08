@@ -16,6 +16,13 @@ class SoilLayer:
 
         self.create_soil_grid()
 
+        self.hit_sound = pygame.mixer.Sound(AUDIO_PATH + FOLDER_SEPARATOR + 'hoe.wav')
+        self.hit_sound.set_volume(0.1)
+
+        self.planting_sound = pygame.mixer.Sound(AUDIO_PATH + FOLDER_SEPARATOR + 'plant.wav')
+        self.planting_sound.set_volume(0.1)
+
+        
     def create_soil_grid(self):
         # requirements
         # if the area is farmable
@@ -40,6 +47,7 @@ class SoilLayer:
             self.hit_rects
         )
         for hit in hits:
+            self.hit_sound.play()
             x = hit.x // TILE_SIZE
             y = hit.y // TILE_SIZE
             
@@ -86,6 +94,7 @@ class SoilLayer:
 
             if not 'P' in self.grid[y][x]:
                 self.grid[y][x].append('P')
+                self.planting_sound.play()
                 Plant(plant_type=seed, soil=hit, groups=[self.all_sprites, self.plant_sprites, collision_group])
 
     def create_soil_tiles(self):
@@ -108,8 +117,6 @@ class SoilLayer:
 
                     pos = (index_col*TILE_SIZE, index_row*TILE_SIZE)
                     SoilTile(pos, self.soil_surfaces[tile_type], [self.all_sprites, self.soil_sprites])
-        # for soil_row in soils:
-        #     print(soil_row)
 
     def check_water(self, point):
         hits = filter(
@@ -140,7 +147,7 @@ class SoilTile(pygame.sprite.Sprite):
         self.image = surface
         self.rect = self.image.get_rect(topleft=pos)
         self.z = LAYERS['soil']
-      
+ 
 class WaterTile(SoilTile):
 
     def __init__(self, pos, surface, groups) -> None:

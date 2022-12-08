@@ -17,6 +17,10 @@ GRAPHICS_PATH = '.' + FOLDER_SEPARATOR + 'assets' + FOLDER_SEPARATOR + 'graphics
 
 DATA_PATH = '.' + FOLDER_SEPARATOR + 'assets' + FOLDER_SEPARATOR + 'data'
 
+FONT_PATH = '.' + FOLDER_SEPARATOR + 'assets' + FOLDER_SEPARATOR + 'font'
+
+AUDIO_PATH = '.' + FOLDER_SEPARATOR + 'assets' + FOLDER_SEPARATOR + 'audio'
+
 #overlay positions
 OVERLAY_POSITIONS = {
     'tool' : (40, SCREEN_HEIGHT - 15),

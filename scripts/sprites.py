@@ -73,18 +73,20 @@ class Tree(Generic):
         self.health = 5 if name == 'Small' else 8
         self.alive = True
         self.stump_surface = pygame.image.load(f'{GRAPHICS_PATH}{FOLDER_SEPARATOR}stumps{FOLDER_SEPARATOR}{"small" if name == "Small" else "large"}.png').convert_alpha()
-        self.invul_timer = Timer(200)
+        self.hitbox = self.rect.copy().inflate(-10, -self.rect.height*0.8)
+        self.hit_sound = pygame.mixer.Sound(AUDIO_PATH + FOLDER_SEPARATOR + 'axe.mp3')
 
     def damage(self):
         if self.alive:
             self.health -= 1
+            self.hit_sound.play()
             Particle(
                     pos=self.rect.topleft,
                     surface=self.image,
                     groups=self.groups()[0],
                     z=LAYERS['main'],
                     duration=300,
-                    color=(200, 0, 0),
+                    color=(100, 0, 0),
                 )
             if len(self.apple_sprites.sprites()) > 0:
                 random_apple = choice(self.apple_sprites.sprites())
@@ -119,7 +121,6 @@ class Tree(Generic):
             self.alive = False
             self.image = self.stump_surface
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-            self.hitbox = self.rect.copy().inflate(-10, -self.rect.height*0.6)
             self.player_add('wood', 3 if self.name == 'Large' else 1)
 
     def create_tree(self):
@@ -127,8 +128,7 @@ class Tree(Generic):
         self.health = 5 if self.name == 'Small' else 8
         self.image = self.alive_surface
         self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-        self.hitbox = self.rect.copy().inflate(-self.rect.width*0.2, -self.rect.height*0.75)
-
-    def update(self, delta_time) -> None:
+        
+    def update(self, _) -> None:
         if self.alive:
             self.check_death()
